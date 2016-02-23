@@ -1,0 +1,80 @@
+package FTP;
+
+import java.io.BufferedReader;
+import java.io.FileOutputStream;
+import java.io.IOException;
+//import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+//import java.net.HttpURLConnection;
+import java.net.Socket;
+//import java.net.URL;
+import java.net.UnknownHostException;
+
+public class WebClient {
+
+	//downloads file from Server Directory
+	public static void saveFile(String fileName, ObjectInputStream inFile){			//inFile contains original file's data
+			try{
+			FileOutputStream outFile = new FileOutputStream(fileName);		//creates file to store downloaded data
+			System.out.println("Saving File " + fileName);
+			byte[] data = new byte[1024];
+			int bytesRead = inFile.read(data);				
+			System.out.println("Download Successful");
+			int totalBytes = bytesRead;
+			while(bytesRead != -1){							//writing data read from the original file into the create file
+	//			System.out.print(bytesRead + " ");
+				outFile.write(data, 0, bytesRead);
+				bytesRead = inFile.read(data);
+				totalBytes +=bytesRead;
+			}
+			System.out.println("Bytes Read = " + totalBytes);
+			System.out.println("Closing Files ...");
+			
+			outFile.close();
+		}
+		catch(IOException e){
+			System.out.println(e);
+		}
+	}
+	
+	@SuppressWarnings("resource")
+	public static void main(String[] args) throws UnknownHostException,
+			IOException, ClassNotFoundException {
+		try{
+			
+				int port = Integer.parseInt(args[1]);					//port number that must match port number provided by the server
+				Socket socket = new Socket("localhost",port);
+				ObjectOutputStream output = new ObjectOutputStream(		
+						socket.getOutputStream());
+				ObjectInputStream input = new ObjectInputStream(
+						socket.getInputStream());			
+				BufferedReader bufferedReader = new BufferedReader(
+						new InputStreamReader(System.in));
+				while (true) {											//reads what file client wants to download
+					String data = bufferedReader.readLine();
+					output.writeObject("GET /" + data);
+					saveFile(data, input);
+					String replyMessage = (String) input.readObject();
+					System.out.println(replyMessage);
+				}
+				  
+	
+			
+			
+			
+		}catch(UnknownHostException e){
+			System.out.println(e);
+		}
+		catch(IOException e){
+			System.out.println(e);
+
+		
+			
+		}
+		
+		
+	}
+
+}
